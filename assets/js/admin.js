@@ -19,6 +19,48 @@ function setStatus(text) {
   if (statusEl) statusEl.textContent = text;
 }
 
+function setUploadStatus(target, text, isError = false) {
+  if (!target) return;
+  target.textContent = text;
+  target.classList.toggle("status--error", Boolean(isError));
+}
+
+async function uploadImages(files) {
+  const validFiles = (files || []).filter(Boolean);
+  if (!validFiles.length) {
+    throw new Error("Выберите файл");
+  }
+
+  const form = new FormData();
+  validFiles.forEach((file) => form.append("images[]", file));
+
+  const res = await fetch("api/admin_upload_image.php", {
+    method: "POST",
+    credentials: "include",
+    body: form
+  });
+
+  let data = null;
+  try {
+    data = await res.json();
+  } catch {}
+
+  if (!res.ok || !data || !data.ok) {
+    const details = data && data.details ? ` (${data.details})` : "";
+    const errorMessage = data && data.error ? data.error : "Ошибка загрузки";
+    throw new Error(`${errorMessage}${details}`);
+  }
+
+  return Array.isArray(data.urls) ? data.urls : [];
+}
+
+function appendLines(existingValue, lines) {
+  const current = String(existingValue || "").trim();
+  const extra = (lines || []).map((line) => String(line || "").trim()).filter(Boolean);
+  if (!extra.length) return current;
+  return current ? `${current}\n${extra.join("\n")}` : extra.join("\n");
+}
+
 function createItem(service = {}) {
   const extraImagesValue = Array.isArray(service.extra_images)
     ? service.extra_images.join("\n")
@@ -55,15 +97,80 @@ function createItem(service = {}) {
       <textarea name="specs_ru" rows="3" placeholder="Характеристики (RU), каждая с новой строки">${escapeHtml(service.specs_ru || "")}</textarea>
       <textarea name="specs_en" rows="3" placeholder="Specifications (EN), one per line">${escapeHtml(service.specs_en || "")}</textarea>
     </div>
-    <div class="admin-row">
-      <input name="image" placeholder="URL фото" value="${escapeHtml(service.image || "")}">
+    <div class="admin-row admin-row--media">
+      <input name="image" placeholder="URL фото (или загрузите файл ниже)" value="${escapeHtml(service.image || "")}">
+      <div class="admin-upload">
+        <input name="image_file" type="file" accept="image/*">
+        <button type="button" class="btn btn--outline" data-upload-main>Загрузить основное фото</button>
+      </div>
+      <button class="btn btn--outline" type="button" data-remove>Удалить</button>
+    </div>
+    <div class="admin-row admin-row--media">
       <textarea name="extra_images" rows="3" placeholder="Дополнительные фото: URL с новой строки">${escapeHtml(extraImagesValue)}</textarea>
-      <button class="btn btn--outline" data-remove>Удалить</button>
+      <div class="admin-upload">
+        <input name="extra_image_files" type="file" accept="image/*" multiple>
+        <button type="button" class="btn btn--outline" data-upload-extra>Загрузить доп. фото</button>
+      </div>
+      <span class="status" data-upload-status></span>
     </div>
   `;
 
   item.querySelector("[data-remove]")?.addEventListener("click", () => {
     item.remove();
+  });
+
+  const imageInput = item.querySelector('[name="image"]');
+  const mainImageFileInput = item.querySelector('[name="image_file"]');
+  const extraImagesArea = item.querySelector('[name="extra_images"]');
+  const extraImageFileInput = item.querySelector('[name="extra_image_files"]');
+  const uploadMainBtn = item.querySelector("[data-upload-main]");
+  const uploadExtraBtn = item.querySelector("[data-upload-extra]");
+  const uploadStatusEl = item.querySelector("[data-upload-status]");
+
+  uploadMainBtn?.addEventListener("click", async () => {
+    const file = mainImageFileInput?.files?.[0];
+    if (!file) {
+      setUploadStatus(uploadStatusEl, "Выберите файл", true);
+      return;
+    }
+
+    uploadMainBtn.disabled = true;
+    setUploadStatus(uploadStatusEl, "Загрузка...");
+    try {
+      const urls = await uploadImages([file]);
+      if (!urls.length) throw new Error("Файл не загружен");
+      if (imageInput) imageInput.value = urls[0];
+      if (mainImageFileInput) mainImageFileInput.value = "";
+      setUploadStatus(uploadStatusEl, "Основное фото загружено");
+    } catch (err) {
+      setUploadStatus(uploadStatusEl, err?.message || "Ошибка загрузки", true);
+    } finally {
+      uploadMainBtn.disabled = false;
+    }
+  });
+
+  uploadExtraBtn?.addEventListener("click", async () => {
+    const files = Array.from(extraImageFileInput?.files || []);
+    if (!files.length) {
+      setUploadStatus(uploadStatusEl, "Выберите файл", true);
+      return;
+    }
+
+    uploadExtraBtn.disabled = true;
+    setUploadStatus(uploadStatusEl, "Загрузка...");
+    try {
+      const urls = await uploadImages(files);
+      if (!urls.length) throw new Error("Файлы не загружены");
+      if (extraImagesArea) {
+        extraImagesArea.value = appendLines(extraImagesArea.value, urls);
+      }
+      if (extraImageFileInput) extraImageFileInput.value = "";
+      setUploadStatus(uploadStatusEl, `Загружено: ${urls.length}`);
+    } catch (err) {
+      setUploadStatus(uploadStatusEl, err?.message || "Ошибка загрузки", true);
+    } finally {
+      uploadExtraBtn.disabled = false;
+    }
   });
 
   return item;

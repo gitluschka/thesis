@@ -574,8 +574,27 @@ a {
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
+.admin-row--media {
+  align-items: start;
+}
+
+.admin-upload {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.admin-upload input[type="file"] {
+  width: 100%;
+  max-width: 100%;
+}
+
 .status {
   color: var(--muted);
+}
+
+.status--error {
+  color: #ff7d7d;
 }
 
 .admin-tabs {
