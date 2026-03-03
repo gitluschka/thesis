@@ -1,6 +1,6 @@
 let catalog = [];
 let currentFilter = "all";
-const PRODUCT_PAGE_VERSION = "20260303-1805";
+const PRODUCT_PAGE_VERSION = "20260303-2010";
 let catalogLoadFailed = false;
 const selectedQtyById = {};
 

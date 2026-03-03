@@ -4,6 +4,8 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
   header("Location: account.html");
   exit;
 }
+
+$assetVersion = strval(@filemtime(__DIR__ . "/assets/js/admin.js") ?: time());
 ?>
 <!doctype html>
 <html lang="ru">
@@ -11,10 +13,10 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Админка — Auto Detailing</title>
-    <link rel="stylesheet" href="assets/css/style.css" />
-    <script defer src="assets/js/api.js"></script>
-    <script defer src="assets/js/nav.js"></script>
-    <script defer src="assets/js/admin.js"></script>
+    <link rel="stylesheet" href="assets/css/style.css?v=<?php echo $assetVersion; ?>" />
+    <script defer src="assets/js/api.js?v=<?php echo $assetVersion; ?>"></script>
+    <script defer src="assets/js/nav.js?v=<?php echo $assetVersion; ?>"></script>
+    <script defer src="assets/js/admin.js?v=<?php echo $assetVersion; ?>"></script>
   </head>
   <body class="theme">
     <header class="topbar">

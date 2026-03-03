@@ -2,6 +2,188 @@ let catalog = [];
 let currentItem = null;
 let loadFailed = false;
 let selectedQty = 1;
+let zoomModal = null;
+let zoomImage = null;
+let zoomFrame = null;
+let zoomScale = 1;
+let zoomOffsetX = 0;
+let zoomOffsetY = 0;
+let isZoomDragging = false;
+let zoomDragLastX = 0;
+let zoomDragLastY = 0;
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function clampZoomOffsets() {
+  if (!zoomImage) return;
+  const maxX = Math.max(0, (zoomImage.clientWidth * zoomScale - zoomImage.clientWidth) / 2);
+  const maxY = Math.max(0, (zoomImage.clientHeight * zoomScale - zoomImage.clientHeight) / 2);
+  zoomOffsetX = clamp(zoomOffsetX, -maxX, maxX);
+  zoomOffsetY = clamp(zoomOffsetY, -maxY, maxY);
+}
+
+function updateZoomFrameState() {
+  if (!zoomFrame) return;
+  const draggable = zoomScale > 1.01;
+  zoomFrame.classList.toggle("is-draggable", draggable);
+  zoomFrame.classList.toggle("is-dragging", draggable && isZoomDragging);
+}
+
+function updateZoomTransform() {
+  if (!zoomImage) return;
+  if (zoomScale <= 1.01) {
+    zoomOffsetX = 0;
+    zoomOffsetY = 0;
+  }
+  clampZoomOffsets();
+  zoomImage.style.transform = `translate(${zoomOffsetX}px, ${zoomOffsetY}px) scale(${zoomScale})`;
+  updateZoomFrameState();
+}
+
+function changeZoomScale(delta) {
+  zoomScale = clamp(zoomScale + delta, 1, 4);
+  updateZoomTransform();
+}
+
+function closeZoomModal() {
+  if (!zoomModal) return;
+  isZoomDragging = false;
+  zoomModal.classList.remove("is-open");
+  zoomModal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  updateZoomFrameState();
+}
+
+function ensureZoomModal() {
+  if (zoomModal && zoomImage) return;
+
+  zoomModal = document.getElementById("product-image-zoom");
+  if (!zoomModal) {
+    zoomModal = document.createElement("div");
+    zoomModal.id = "product-image-zoom";
+    zoomModal.className = "product-zoom";
+    zoomModal.setAttribute("aria-hidden", "true");
+    zoomModal.innerHTML = `
+      <div class="product-zoom__dialog">
+        <div class="product-zoom__toolbar">
+          <button type="button" class="btn btn--ghost product-zoom__btn" data-zoom-minus>-</button>
+          <button type="button" class="btn btn--ghost product-zoom__btn" data-zoom-plus>+</button>
+          <button type="button" class="btn btn--ghost product-zoom__btn" data-zoom-reset>100%</button>
+          <button type="button" class="btn btn--outline product-zoom__btn" data-zoom-close>Закрыть</button>
+        </div>
+        <div class="product-zoom__frame">
+          <img class="product-zoom__img" src="" alt="">
+        </div>
+      </div>
+    `;
+    document.body.appendChild(zoomModal);
+  }
+
+  zoomImage = zoomModal.querySelector(".product-zoom__img");
+  zoomFrame = zoomModal.querySelector(".product-zoom__frame");
+  const closeBtn = zoomModal.querySelector("[data-zoom-close]");
+  const minusBtn = zoomModal.querySelector("[data-zoom-minus]");
+  const plusBtn = zoomModal.querySelector("[data-zoom-plus]");
+  const resetBtn = zoomModal.querySelector("[data-zoom-reset]");
+
+  closeBtn?.addEventListener("click", closeZoomModal);
+  minusBtn?.addEventListener("click", () => changeZoomScale(-0.2));
+  plusBtn?.addEventListener("click", () => changeZoomScale(0.2));
+  resetBtn?.addEventListener("click", () => {
+    zoomScale = 1;
+    zoomOffsetX = 0;
+    zoomOffsetY = 0;
+    updateZoomTransform();
+  });
+
+  zoomModal.addEventListener("click", (event) => {
+    if (event.target === zoomModal) closeZoomModal();
+  });
+
+  zoomFrame?.addEventListener(
+    "wheel",
+    (event) => {
+      event.preventDefault();
+      changeZoomScale(event.deltaY < 0 ? 0.2 : -0.2);
+    },
+    { passive: false }
+  );
+
+  zoomFrame?.addEventListener("pointerdown", (event) => {
+    if (zoomScale <= 1.01) return;
+    isZoomDragging = true;
+    zoomDragLastX = event.clientX;
+    zoomDragLastY = event.clientY;
+    zoomFrame.setPointerCapture(event.pointerId);
+    updateZoomFrameState();
+    event.preventDefault();
+  });
+
+  zoomFrame?.addEventListener("pointermove", (event) => {
+    if (!isZoomDragging) return;
+    const dx = event.clientX - zoomDragLastX;
+    const dy = event.clientY - zoomDragLastY;
+    zoomDragLastX = event.clientX;
+    zoomDragLastY = event.clientY;
+    zoomOffsetX += dx;
+    zoomOffsetY += dy;
+    updateZoomTransform();
+  });
+
+  const stopZoomDragging = (event) => {
+    if (!isZoomDragging) return;
+    isZoomDragging = false;
+    if (zoomFrame && event && typeof event.pointerId === "number" && zoomFrame.hasPointerCapture(event.pointerId)) {
+      zoomFrame.releasePointerCapture(event.pointerId);
+    }
+    updateZoomFrameState();
+  };
+
+  zoomFrame?.addEventListener("pointerup", stopZoomDragging);
+  zoomFrame?.addEventListener("pointercancel", stopZoomDragging);
+  zoomFrame?.addEventListener("pointerleave", stopZoomDragging);
+  zoomImage?.addEventListener("dragstart", (event) => event.preventDefault());
+
+  document.addEventListener("keydown", (event) => {
+    if (!zoomModal || !zoomModal.classList.contains("is-open")) return;
+    if (event.key === "Escape") {
+      closeZoomModal();
+      return;
+    }
+    if (event.key === "+" || event.key === "=") {
+      event.preventDefault();
+      changeZoomScale(0.2);
+      return;
+    }
+    if (event.key === "-") {
+      event.preventDefault();
+      changeZoomScale(-0.2);
+    }
+  });
+}
+
+function openZoomModal(src, altText) {
+  if (!src) return;
+  ensureZoomModal();
+  if (!zoomModal || !zoomImage) return;
+
+  zoomScale = 1;
+  zoomOffsetX = 0;
+  zoomOffsetY = 0;
+  isZoomDragging = false;
+  zoomImage.src = src;
+  zoomImage.alt = altText || "";
+  zoomImage.onload = () => {
+    updateZoomTransform();
+  };
+  updateZoomTransform();
+
+  zoomModal.classList.add("is-open");
+  zoomModal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
 
 function getLang() {
   return localStorage.getItem("lang") || "ru";
@@ -163,9 +345,17 @@ function renderProduct() {
   const safeDesc = escapeHtml(text.desc || "");
   const safeFullDesc = escapeHtml(text.fullDesc || "");
   const safeSpecs = escapeHtml(text.specs || "");
+  const galleryHint = uniqueImages.length
+    ? `<p class="status product-gallery__hint">${escapeHtml(
+        lang === "en" ? "Click image to zoom" : "Нажмите на фото для увеличения"
+      )}</p>`
+    : "";
   const gallery = uniqueImages.length
     ? uniqueImages
-        .map((src) => `<img src="${escapeHtml(src)}" alt="${safeTitle}" class="product-gallery__img">`)
+        .map(
+          (src) =>
+            `<img src="${escapeHtml(src)}" alt="${safeTitle}" class="product-gallery__img" data-zoom-src="${escapeHtml(src)}">`
+        )
         .join("")
     : `<div class="product-gallery__placeholder">${escapeHtml(tr("product_no_image"))}</div>`;
 
@@ -182,6 +372,7 @@ function renderProduct() {
     <div class="product-layout">
       <div class="card">
         <div class="product-gallery">${gallery}</div>
+        ${galleryHint}
       </div>
 
       <div class="card product-main">
@@ -222,6 +413,12 @@ function renderProduct() {
   if (addBtn) {
     addBtn.addEventListener("click", addCurrentToCart);
   }
+
+  root.querySelectorAll(".product-gallery__img").forEach((img) => {
+    img.addEventListener("click", () => {
+      openZoomModal(img.getAttribute("data-zoom-src") || img.getAttribute("src"), img.getAttribute("alt") || "");
+    });
+  });
 }
 
 document.addEventListener("DOMContentLoaded", async () => {

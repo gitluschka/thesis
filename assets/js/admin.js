@@ -98,15 +98,20 @@ function createItem(service = {}) {
       <textarea name="specs_en" rows="3" placeholder="Specifications (EN), one per line">${escapeHtml(service.specs_en || "")}</textarea>
     </div>
     <div class="admin-row admin-row--media">
-      <input name="image" placeholder="URL фото (или загрузите файл ниже)" value="${escapeHtml(service.image || "")}">
+      <input name="image" type="hidden" value="${escapeHtml(service.image || "")}">
       <div class="admin-upload">
         <input name="image_file" type="file" accept="image/*">
         <button type="button" class="btn btn--outline" data-upload-main>Загрузить основное фото</button>
+        <input name="image_path" class="admin-upload-path" readonly placeholder="Основное фото не загружено" value="${escapeHtml(
+          service.image || ""
+        )}">
       </div>
       <button class="btn btn--outline" type="button" data-remove>Удалить</button>
     </div>
     <div class="admin-row admin-row--media">
-      <textarea name="extra_images" rows="3" placeholder="Дополнительные фото: URL с новой строки">${escapeHtml(extraImagesValue)}</textarea>
+      <textarea name="extra_images" rows="3" readonly placeholder="Дополнительные фото появятся после загрузки">${escapeHtml(
+        extraImagesValue
+      )}</textarea>
       <div class="admin-upload">
         <input name="extra_image_files" type="file" accept="image/*" multiple>
         <button type="button" class="btn btn--outline" data-upload-extra>Загрузить доп. фото</button>
@@ -120,6 +125,7 @@ function createItem(service = {}) {
   });
 
   const imageInput = item.querySelector('[name="image"]');
+  const imagePathInput = item.querySelector('[name="image_path"]');
   const mainImageFileInput = item.querySelector('[name="image_file"]');
   const extraImagesArea = item.querySelector('[name="extra_images"]');
   const extraImageFileInput = item.querySelector('[name="extra_image_files"]');
@@ -140,6 +146,7 @@ function createItem(service = {}) {
       const urls = await uploadImages([file]);
       if (!urls.length) throw new Error("Файл не загружен");
       if (imageInput) imageInput.value = urls[0];
+      if (imagePathInput) imagePathInput.value = urls[0];
       if (mainImageFileInput) mainImageFileInput.value = "";
       setUploadStatus(uploadStatusEl, "Основное фото загружено");
     } catch (err) {
