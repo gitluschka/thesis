@@ -53,6 +53,7 @@ const i18n = {
     product_not_found: "Товар не найден",
     product_load_error: "Не удалось загрузить товар. Обновите страницу.",
     product_no_image: "Нет фото",
+    product_photo_soon: "Товар на фотосессии, скоро загрузим",
     product_no_specs: "Характеристики не указаны",
     product_added: "Товар добавлен",
 
@@ -146,6 +147,7 @@ const i18n = {
     product_not_found: "Product not found",
     product_load_error: "Could not load product. Please refresh the page.",
     product_no_image: "No image",
+    product_photo_soon: "Product photo is coming soon",
     product_no_specs: "Specifications are not provided",
     product_added: "Product added",
 

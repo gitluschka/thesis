@@ -1,6 +1,6 @@
 let catalog = [];
 let currentFilter = "all";
-const PRODUCT_PAGE_VERSION = "20260303-2010";
+const PRODUCT_PAGE_VERSION = "20260303-2045";
 let catalogLoadFailed = false;
 const selectedQtyById = {};
 
@@ -139,7 +139,7 @@ function renderCatalog() {
 
       const img = isSafeImageSource(item.image)
         ? `<img src="${escapeHtml(item.image)}" alt="${safeTitle}" />`
-        : "";
+        : `<span class="catalog-image__placeholder-text">${escapeHtml(tr("product_photo_soon"))}</span>`;
       const imgClass = isSafeImageSource(item.image)
         ? "catalog-image"
         : "catalog-image catalog-image--placeholder";
@@ -151,7 +151,7 @@ function renderCatalog() {
       return `
         <div class="catalog-card" data-category="${safeCategory}">
           <div class="${imgClass}">
-            ${img || `<span>${safeTitle}</span>`}
+            ${img}
           </div>
           <div class="catalog-body">
             <h3>

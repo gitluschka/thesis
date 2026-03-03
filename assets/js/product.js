@@ -357,7 +357,7 @@ function renderProduct() {
             `<img src="${escapeHtml(src)}" alt="${safeTitle}" class="product-gallery__img" data-zoom-src="${escapeHtml(src)}">`
         )
         .join("")
-    : `<div class="product-gallery__placeholder">${escapeHtml(tr("product_no_image"))}</div>`;
+    : `<div class="product-gallery__placeholder">${escapeHtml(tr("product_photo_soon"))}</div>`;
 
   const specsBlock = safeSpecs
     ? `<pre class="product-specs__text">${safeSpecs}</pre>`
