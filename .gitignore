@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# Runtime DB/session artifacts
+data/app.db
+*.sqlite
+*.sqlite3
+
+# Logs/temp
+*.log
+tmp/
+temp/

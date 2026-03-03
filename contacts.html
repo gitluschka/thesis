@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Контакты — Auto Detailing</title>
+    <meta name="description" content="Контакты автора проекта." />
+    <link rel="stylesheet" href="assets/css/style.css?v=20260303-1805" />
+    <script defer src="assets/js/i18n.js?v=20260303-1805"></script>
+    <script defer src="assets/js/api.js?v=20260303-1805"></script>
+    <script defer src="assets/js/nav.js?v=20260303-1805"></script>
+  </head>
+  <body class="theme">
+    <header class="topbar">
+      <div class="container topbar__inner">
+        <a class="brand" href="index.html">
+          <span class="brand__mark">AE</span>
+          <span class="brand__text">Auto Detailing</span>
+        </a>
+        <nav class="nav">
+          <a data-i18n="nav_home" class="nav__link" href="index.html">Главная</a>
+          <a data-i18n="nav_catalog" class="nav__link" href="services.html">Каталог</a>
+          <a data-i18n="nav_account" class="nav__link" href="account.html">Кабинет</a>
+          <a data-i18n="nav_contacts" class="nav__link is-active" href="contacts.html">Контакты</a>
+        </nav>
+        <div class="topbar__actions">
+          <button class="btn btn--ghost" data-lang-switch="ru"><span class="flag flag--ru" aria-hidden="true"></span>RU</button>
+          <button class="btn btn--ghost" data-lang-switch="en"><span class="flag flag--en" aria-hidden="true"></span>EN</button>
+          <a class="btn btn--primary btn--cart" href="cart.html"><span data-i18n="nav_cart">Корзина</span><span id="cart-badge" class="top-cart-badge">0</span></a>
+        </div>
+      </div>
+    </header>
+
+    <main class="section">
+      <div class="container">
+        <div class="section__head">
+          <h1 data-i18n="contacts_title">Контакты</h1>
+          <p data-i18n="contacts_subtitle">Cтудент МГОК/Hexlet.</p>
+        </div>
+
+        <div class="contacts">
+          <div class="card card--dark">
+  <h3 data-i18n="contact_author_title">Автор проекта</h3>
+  <p><strong data-i18n="contact_author_name">Александров Егор Александрович</strong></p>
+  <p><strong data-i18n="contact_phone_label">Телефон:</strong> <span>+7-903-002-52-71</span></p>
+  <p><strong data-i18n="contact_email_label">E-mail:</strong> <span>egor-ask@yandex.ru</span></p>
+  <p><strong data-i18n="contact_schedule_label">График:</strong> <span data-i18n="contact_schedule_value">Вечерами</span></p>
+</div>
+
+          <div class="card map-card">
+            <img class="contact-image" src="assets/img/4025780.png" alt="Автор проекта" />
+          </div>
+        </div>
+      </div>
+    </main>
+
+  </body>
+</html>
